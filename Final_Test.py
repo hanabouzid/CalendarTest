@@ -139,13 +139,33 @@ n=int(x)
 print(n)
 j=0
 while j<n:
-    x=input("donner le nom de l'invite")
+    x = input("donner le nom de l'invite")
     for l in nameListe:
         if x == l :
             print ("personne trouvée")
             exist = True
+            #on va verifier la disponibilité de chaque invité
 
-            break
+            body = {
+                "timeMin": '2015-05-28T09:00:00-07:00',
+                "timeMax": '2015-07-28T09:00:00-07:00',
+                "timeZone": 'US/Central',
+                "items": [{"id": 'primary'}, {"id": 'hana.bouzid95@gmail.com'}]
+            }
+
+            eventsResult = service.freebusy().query(body=body).execute()
+            cal_dict = eventsResult[u'calendars']
+            print(cal_dict)
+            for cal_name in cal_dict:
+                print(cal_name, ':', cal_dict[cal_name])
+                statut = cal_dict[cal_name]
+                for i in statut:
+                    if (i == 'busy' and statut[i] == []):
+                        print("free")
+                    elif (i == 'busy' and statut[i] != []):
+                        print('busy')
+        else:
+            exist= False
     if exist == False:
         print(" la personne n'est pas trouvé")
     j+=1
@@ -154,23 +174,3 @@ while j<n:
 
 
 
-
-
-body = {
-      "timeMin":'2015-05-28T09:00:00-07:00' ,
-      "timeMax": '2015-07-28T09:00:00-07:00',
-      "timeZone": 'US/Central',
-      "items": [{"id": 'primary'},{"id": 'hana.bouzid95@gmail.com'}]
-    }
-
-eventsResult = service.freebusy().query(body=body).execute()
-cal_dict = eventsResult[u'calendars']
-print(cal_dict)
-for cal_name in cal_dict:
-        print(cal_name,':',cal_dict[cal_name])
-        statut=cal_dict[cal_name]
-        for i in statut:
-            if (i=='busy' and statut[i]==[]):
-                print("free")
-            elif (i=='busy' and statut[i]!=[]):
-                print('busy')
