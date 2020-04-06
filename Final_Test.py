@@ -86,36 +86,7 @@ results= people_service.people().connections().list(resourceName='people/me', pa
 connections = results.get('connections', [])
 print (connections)
 
-event = {
-    'summary': 'Google I/O 2015',
-    'location': '800 Howard St., San Francisco, CA 94103',
-    'description': 'A chance to hear more about Google\'s developer products.',
-    'start': {
-        'dateTime': '2015-05-28T09:00:00-07:00',
-        'timeZone': 'America/Los_Angeles',
-    },
-    'end': {
-        'dateTime': '2015-05-28T17:00:00-07:00',
-        'timeZone': 'America/Los_Angeles',
-    },
-    'recurrence': [
-        'RRULE:FREQ=DAILY;COUNT=2'
-    ],
-    'attendees': [
-        {'email': 'lpage@example.com'},
-        {'email': 'sbrin@example.com'},
-    ],
-    'reminders': {
-        'useDefault': False,
-        'overrides': [
-            {'method': 'email', 'minutes': 24 * 60},
-            {'method': 'popup', 'minutes': 10},
-        ],
-    },
-}
 
-event = service.events().insert(calendarId='primary', body=event).execute()
-print ('Event created: %s' % (event.get('htmlLink')))
     # la liste des evenements à venir
 page_token = None
 while True:
@@ -128,6 +99,7 @@ while True:
 #getting contacts emails and names in two lists nameliste and adsmails
 nameListe = []
 adsmails =[]
+attendee=[]
 exist = False
 for person in connections:
     emails = person.get('emailAddresses', [])
@@ -140,17 +112,20 @@ print(n)
 j=0
 while j<n:
     x = input("donner le nom de l'invite")
-    for l in nameListe:
-        if x == l :
+    for l in range(0,len(nameListe)):
+        if x == nameListe[l]:
             print ("personne trouvée")
             exist = True
+            mail=adsmails[l]
+            attendee.append(mail)
+            print(attendee)
             #on va verifier la disponibilité de chaque invité
 
             body = {
                 "timeMin": '2015-05-28T09:00:00-07:00',
                 "timeMax": '2015-07-28T09:00:00-07:00',
                 "timeZone": 'US/Central',
-                "items": [{"id": 'primary'}, {"id": 'hana.bouzid95@gmail.com'}]
+                "items": [{"id": mail}]
             }
 
             eventsResult = service.freebusy().query(body=body).execute()
@@ -171,6 +146,32 @@ while j<n:
     j+=1
 
 
+event = {
+    'summary': 'Google I/O 2015',
+    'location': '800 Howard St., San Francisco, CA 94103',
+    'description': 'A chance to hear more about Google\'s developer products.',
+    'start': {
+        'dateTime': '2015-05-28T09:00:00-07:00',
+        'timeZone': 'America/Los_Angeles',
+    },
+    'end': {
+        'dateTime': '2015-05-28T17:00:00-07:00',
+        'timeZone': 'America/Los_Angeles',
+    },
+    'recurrence': [
+        'RRULE:FREQ=DAILY;COUNT=2'
+    ],
+    'attendees':attendee,
+    'reminders': {
+        'useDefault': False,
+        'overrides': [
+            {'method': 'email', 'minutes': 24 * 60},
+            {'method': 'popup', 'minutes': 10},
+        ],
+    },
+}
 
+event = service.events().insert(calendarId='primary', body=event).execute()
+print ('Event created: %s' % (event.get('htmlLink')))
 
 
