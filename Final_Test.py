@@ -134,15 +134,27 @@ for person in connections:
     names = person.get('names', [])
     adsmails.append(emails[0].get('value'))
     nameListe.append(names[0].get('displayName'))
-x= input ("donner le nom del l'invité")
-for i in nameListe:
-    if i == x :
-        print ("personne trouvée")
-        exist = True
+x=input("donner le nombre des invités")
+n=int(x)
+print(n)
+j=0
+while j<n:
+    x=input("donner le nom de l'invite")
+    for l in nameListe:
+        if x == l :
+            print ("personne trouvée")
+            exist = True
 
-        break
-if exist == False :
-    print(" la personne n'est pas trouvé")
+            break
+    if exist == False:
+        print(" la personne n'est pas trouvé")
+    j+=1
+
+
+
+
+
+
 
 body = {
       "timeMin":'2015-05-28T09:00:00-07:00' ,
