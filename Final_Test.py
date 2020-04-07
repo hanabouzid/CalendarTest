@@ -88,14 +88,14 @@ print (connections)
 
 
     # la liste des evenements à venir
-page_token = None
-while True:
-    events = service.events().list(calendarId='primary', pageToken=page_token).execute()
-    for e in events['items']:
-        print(e['summary'])
-    page_token = events.get('nextPageToken')
-    if not page_token:
-        break
+#page_token = None
+#while True:
+    #events = service.events().list(calendarId='primary', pageToken=page_token).execute()
+    #for e in events['items']:
+        #print(e['summary'])
+    #page_token = events.get('nextPageToken')
+    #if not page_token:
+        #break
 #getting contacts emails and names in two lists nameliste and adsmails
 nameListe = []
 adsmails =[]
@@ -118,7 +118,7 @@ while j<n:
             exist = True
             mail=adsmails[l]
             attendee.append(mail)
-            print(attendee)
+            print("listedes attendees",attendee)
             #on va verifier la disponibilité de chaque invité
 
             body = {
@@ -145,23 +145,28 @@ while j<n:
         print(" la personne n'est pas trouvé")
     j+=1
 
-
+print("liste des attendees est:",attendee)
+attendeess = []
+for i in range(len(attendee)):
+    email = {'email': attendee[i]}
+    attendeess.append(email)
+print(attendeess)
 event = {
-    'summary': 'Google I/O 2015',
+    'summary': 'Google I/O 2020',
     'location': '800 Howard St., San Francisco, CA 94103',
     'description': 'A chance to hear more about Google\'s developer products.',
     'start': {
-        'dateTime': '2015-05-28T09:00:00-07:00',
+        'dateTime': '2020-05-28T09:00:00-07:00',
         'timeZone': 'America/Los_Angeles',
     },
     'end': {
-        'dateTime': '2015-05-28T17:00:00-07:00',
+        'dateTime': '2020-05-28T17:00:00-07:00',
         'timeZone': 'America/Los_Angeles',
     },
     'recurrence': [
         'RRULE:FREQ=DAILY;COUNT=2'
     ],
-    'attendees':attendee,
+    'attendees':attendeess,
     'reminders': {
         'useDefault': False,
         'overrides': [
