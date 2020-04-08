@@ -1,16 +1,15 @@
 from __future__ import print_function
-import datetime
+from datetime import datetime, timedelta
 import pickle
 import os.path
-from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 import httplib2
-from apiclient.discovery import build
+from googleapiclient.discovery import build
 from oauth2client.file import Storage
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client import tools
-
+import pytz
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 FLOW = OAuth2WebServerFlow(
@@ -43,7 +42,7 @@ if not creds or not creds.valid:
 service = build('calendar', 'v3', credentials=creds)
 
     # Call the Calendar API
-now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
+now = datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
 print('Getting the upcoming 10 events')
 events_result = service.events().list(calendarId='primary', timeMin=now,
                                         maxResults=10, singleEvents=True,
@@ -109,6 +108,19 @@ for person in connections:
 x=input("donner le nombre des invités")
 n=int(x)
 print(n)
+local_time = pytz.timezone("US/Central")
+dmin = input("donner la date de debut")
+startdt  = datetime.strptime(dmin,'%Y-%m-%d %H:%M:%S')
+local_datetime1 = local_time.localize(startdt, is_dst=None)
+utc_datetime1 = local_datetime1.astimezone(pytz.utc)
+datestart = utc_datetime1.isoformat("T")
+dmax = input("donner la date de fin")
+enddt = datetime.strptime(dmax,'%Y-%m-%d %H:%M:%S')
+local_datetime2 = local_time.localize(enddt, is_dst=None)
+utc_datetime2 = local_datetime2.astimezone(pytz.utc)
+datend= utc_datetime2.isoformat("T")
+print(datestart)
+
 j=0
 while j<n:
     x = input("donner le nom de l'invite")
@@ -122,8 +134,8 @@ while j<n:
             #on va verifier la disponibilité de chaque invité
 
             body = {
-                "timeMin": '2015-05-28T09:00:00-07:00',
-                "timeMax": '2015-07-28T09:00:00-07:00',
+                "timeMin": datestart,
+                "timeMax": datend,
                 "timeZone": 'US/Central',
                 "items": [{"id": mail}]
             }
@@ -156,11 +168,11 @@ event = {
     'location': '800 Howard St., San Francisco, CA 94103',
     'description': 'A chance to hear more about Google\'s developer products.',
     'start': {
-        'dateTime': '2020-05-28T09:00:00-07:00',
+        'dateTime': datestart,
         'timeZone': 'America/Los_Angeles',
     },
     'end': {
-        'dateTime': '2020-05-28T17:00:00-07:00',
+        'dateTime': datend,
         'timeZone': 'America/Los_Angeles',
     },
     'recurrence': [
