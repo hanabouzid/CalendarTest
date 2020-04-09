@@ -109,8 +109,15 @@ x=input("donner le nombre des invités")
 n=int(x)
 print(n)
 local_time = pytz.timezone("US/Central")
+w = input("donner la date de cet evenement")
+sttdt  = datetime.strptime(w,'%Y-%m-%d %H:%M:%S')
+dx = pytz.utc.localize(sttdt)
+datew = dx.isoformat("T")
+print(datew)
 dmin = input("donner la date de debut")
+#rendre la chaine dmin de type datetime
 startdt  = datetime.strptime(dmin,'%Y-%m-%d %H:%M:%S')
+#rendre startdt de type json avec la format acceptee par google api
 local_datetime1 = local_time.localize(startdt, is_dst=None)
 utc_datetime1 = local_datetime1.astimezone(pytz.utc)
 datestart = utc_datetime1.isoformat("T")
@@ -120,6 +127,7 @@ local_datetime2 = local_time.localize(enddt, is_dst=None)
 utc_datetime2 = local_datetime2.astimezone(pytz.utc)
 datend= utc_datetime2.isoformat("T")
 print(datestart)
+
 
 j=0
 while j<n:
@@ -134,7 +142,7 @@ while j<n:
             #on va verifier la disponibilité de chaque invité
 
             body = {
-                "timeMin": datestart,
+                "timeMin": datew,
                 "timeMax": datend,
                 "timeZone": 'US/Central',
                 "items": [{"id": mail}]
