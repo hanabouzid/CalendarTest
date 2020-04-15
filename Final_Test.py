@@ -10,6 +10,7 @@ from oauth2client.file import Storage
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client import tools
 import pytz
+UTC_TZ = u'+00:00'
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 FLOW = OAuth2WebServerFlow(
@@ -108,12 +109,13 @@ for person in connections:
 x=input("donner le nombre des invités")
 n=int(x)
 print(n)
-local_time = pytz.timezone("US/Central")
+local_time = pytz.timezone("UTC")
 w = input("donner la date de cet evenement")
 sttdt  = datetime.strptime(w,'%Y-%m-%d %H:%M:%S')
 dx = pytz.utc.localize(sttdt)
 datew = dx.isoformat("T")
 print(datew)
+
 dmin = input("donner la date de debut")
 #rendre la chaine dmin de type datetime
 startdt  = datetime.strptime(dmin,'%Y-%m-%d %H:%M:%S')
@@ -157,12 +159,13 @@ while j<n:
                 for i in statut:
                     if (i == 'busy' and statut[i] == []):
                         print("free")
+
                     elif (i == 'busy' and statut[i] != []):
                         print('busy')
         else:
             exist= False
-    if exist == False:
-        print(" la personne n'est pas trouvé")
+    #if exist == False:
+        #print(" la personne n'est pas trouvé")
     j+=1
 
 print("liste des attendees est:",attendee)
@@ -171,9 +174,55 @@ for i in range(len(attendee)):
     email = {'email': attendee[i]}
     attendeess.append(email)
 print(attendeess)
+notification=input("voulez vous envoyer une notification")
+if notification == 'yes':
+    notif = True,
+else:
+    notif = False
+ #liste des emails de toutes les salles de focus
+freerooms =[]
+freemails=[]
+nameroom =["Midoun meeting room","Aiguilles Meeting Room","Barrouta Meeting Room","Kantaoui Meeting Room","Gorges Meeting Room","Ichkeul Meeting Room","Khemir Meeting Room","Tamaghza Meeting Room","Friguia Meeting Room","Ksour Meeting Room","Medeina Meeting Room","Thyna Meeting Room"]
+emailroom=["focus-corporation.com_3436373433373035363932@resource.calendar.google.com","focus-corporation.com_3132323634363237333835@resource.calendar.google.com","focus-corporation.com_3335353934333838383834@resource.calendar.google.com","focus-corporation.com_3335343331353831343533@resource.calendar.google.com","focus-corporation.com_3436383331343336343130@resource.calendar.google.com","focus-corporation.com_36323631393136363531@resource.calendar.google.com","focus-corporation.com_3935343631343936373336@resource.calendar.google.com","focus-corporation.com_3739333735323735393039@resource.calendar.google.com","focus-corporation.com_3132343934363632383933@resource.calendar.google.com","focus-corporation.com_@resource.calendar.google.com", "focus-corporation.com_@resource.calendar.google.com","focus-corporation.com_@resource.calendar.google.com"]
+for i in range(0,len(emailroom)):
+    body = {
+        "timeMin": datew,
+        "timeMax": datend,
+        "timeZone": 'US/Central',
+        "items": [{"id":emailroom[i]}]
+    }
+    roomResult = service.freebusy().query(body=body).execute()
+    room_dict = roomResult[u'calendars']
+    print(room_dict)
+    for cal_room in room_dict:
+        print(cal_room, ':', room_dict[cal_room])
+        case = room_dict[cal_room]
+        for j in case:
+            if (j == 'busy' and case[j] == []):
+                print("free")
+                #la liste freerooms va prendre  les noms des salles free
+                freerooms.append(nameroom[i])
+                freemails.append(emailroom[i])
+
+            elif (j == 'busy' and case[j] != []):
+                print('busy')
+print(freerooms)
+print(freemails)
+reservation = input('do you need to make a reservation for a meeting room? Yes or No?')
+if reservation == 'yes':
+    print("les salles disponibles a cette date sont",freerooms)
+    salle=input('quelle salle choisissez vous')
+    print (salle)
+    for i in range(0,len(freerooms)):
+        if(freerooms[i] == salle):
+            attendeess.append({'email': freemails[i]})
+print(attendeess)
+
+#affichage des salles disponibles a cette date
+
 event = {
     'summary': 'Google I/O 2020',
-    'location': '800 Howard St., San Francisco, CA 94103',
+    'location': salle,
     'description': 'A chance to hear more about Google\'s developer products.',
     'start': {
         'dateTime': datestart,
@@ -184,7 +233,7 @@ event = {
         'timeZone': 'America/Los_Angeles',
     },
     'recurrence': [
-        'RRULE:FREQ=DAILY;COUNT=2'
+        'RRULE:FREQ=DAILY;COUNT=1'
     ],
     'attendees':attendeess,
     'reminders': {
@@ -196,7 +245,7 @@ event = {
     },
 }
 
-event = service.events().insert(calendarId='primary', body=event).execute()
+event = service.events().insert(calendarId='primary',sendNotifications=notif, body=event).execute()
 print ('Event created: %s' % (event.get('htmlLink')))
 
 
