@@ -27,7 +27,7 @@ def main():
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                'client_secret_creds.json', SCOPES)
+                'client_secret.json', SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
         with open('token.pickle', 'wb') as token:
@@ -84,15 +84,7 @@ def main():
 
     event = service.events().insert(calendarId='primary', body=event).execute()
     print ('Event created: %s' % (event.get('htmlLink')))
-    # la liste des evenements à venir
-    page_token = None
-    while True:
-        events = service.events().list(calendarId='primary', pageToken=page_token).execute()
-        for e in events['items']:
-            print(e['summary'])
-        page_token = events.get('nextPageToken')
-        if not page_token:
-            break
+
 
 if __name__ == '__main__':
     main()

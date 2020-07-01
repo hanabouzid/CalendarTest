@@ -14,8 +14,8 @@ UTC_TZ = u'+00:00'
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 FLOW = OAuth2WebServerFlow(
-    client_id='1019838388650-nt1mfumr3cltemeq7js8mjitn7a2kuu7.apps.googleusercontent.com',
-    client_secret='rx7eaJ-13TiHqOWIiF-Bxu4L',
+    client_id='73558912455-smu6u0uha6c2t56n2sigrp76imm2p35j.apps.googleusercontent.com',
+    client_secret='0X_IKOiJbLIU_E5gN3NefNns',
     scope='https://www.googleapis.com/auth/contacts.readonly',
     user_agent='Smart assistant box')
 """Shows basic usage of the Google Calendar API.
@@ -34,7 +34,7 @@ if not creds or not creds.valid:
         creds.refresh(Request())
     else:
         flow = InstalledAppFlow.from_client_secrets_file(
-            'client_secret_creds.json', SCOPES)
+            'credentials.json', SCOPES)
         creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
     with open('token.pickle', 'wb') as token:
@@ -82,9 +82,9 @@ people_service = build(serviceName='people', version='v1', http=http)
 #profile = people_service.people().get('people/me', pageSize=100, personFields='names,emailAddresses').execute()
 # To get a list of people in the user's contacts,
 #results = service.people().connections().list(resourceName='people/me',personFields='names,emailAddresses',fields='connections,totalItems,nextSyncToken').execute()
-results= people_service.people().connections().list(resourceName='people/me', pageSize=100, personFields='names,emailAddresses',fields='connections,totalItems,nextSyncToken').execute()
+results= people_service.people().connections().list(resourceName='people/me', pageSize=100, personFields='names,emailAddresses,events',fields='connections,totalItems,nextSyncToken').execute()
 connections = results.get('connections', [])
-print (connections)
+print ("connections:",connections)
 
 
     # la liste des evenements à venir
@@ -96,16 +96,45 @@ print (connections)
     #page_token = events.get('nextPageToken')
     #if not page_token:
         #break
+# get calendars id
+page_token = None
+while True:
+  calendar_list = service.calendarList().list(pageToken=page_token).execute()
+  for calendar_list_entry in calendar_list['items']:
+      print("calendars id:",calendar_list_entry["id"])
+  page_token = calendar_list.get('nextPageToken')
+  if not page_token:
+    break
 #getting contacts emails and names in two lists nameliste and adsmails
+
 nameListe = []
 adsmails =[]
+eventlist=[]
 attendee=[]
-exist = False
+
+#trouver connections :
 for person in connections:
     emails = person.get('emailAddresses', [])
+    print("email",emails)
     names = person.get('names', [])
+    print("name",names)
+
+    #event_pers= person.get('events',[])
+    #print("event",events)
     adsmails.append(emails[0].get('value'))
+    print(adsmails)
     nameListe.append(names[0].get('displayName'))
+    print(nameListe)
+
+    #a ={}
+    #a ["summary"] =event_pers[0].get('summary')
+    #a["created"]=event_pers[0].get('created')
+    #a["updated"] = event_pers[0].get('updated')
+
+    #eventlist.append(a)
+      
+#print("evenements",eventlist)
+
 x=input("donner le nombre des invités")
 n=int(x)
 print(n)
@@ -130,9 +159,9 @@ utc_datetime2 = local_datetime2.astimezone(pytz.utc)
 datend= utc_datetime2.isoformat("T")
 print(datestart)
 
-
 j=0
 while j<n:
+    exist = False
     x = input("donner le nom de l'invite")
     for l in range(0,len(nameListe)):
         if x == nameListe[l]:
@@ -141,32 +170,53 @@ while j<n:
             mail=adsmails[l]
             attendee.append(mail)
             print("listedes attendees",attendee)
-            #on va verifier la disponibilité de chaque invité
 
+            # on va verifier la disponibilité de chaque invité#on va verifier la disponibilité de chaque invité
+            #methode1
+            #events_result = service.events().list(calendarId=mail, timeMin=datew,timeMax=datend,
+                                                  #singleEvents=True,
+                                                  #orderBy='startTime').execute()
+            #events = events_result.get('items', [])
+
+            #if not events:
+                #print('the attendee is free')
+            #else :
+                #print('the attendee is busy ')
+            #methode2
             body = {
                 "timeMin": datew,
                 "timeMax": datend,
                 "timeZone": 'US/Central',
                 "items": [{"id": mail}]
             }
-
+            print (body.get("timeMin"))
             eventsResult = service.freebusy().query(body=body).execute()
             cal_dict = eventsResult[u'calendars']
             print(cal_dict)
             for cal_name in cal_dict:
                 print(cal_name, ':', cal_dict[cal_name])
                 statut = cal_dict[cal_name]
+                bsy=0
                 for i in statut:
+
                     if (i == 'busy' and statut[i] == []):
                         print("free")
 
+
+
                     elif (i == 'busy' and statut[i] != []):
                         print('busy')
-        else:
-            exist= False
-    #if exist == False:
-        #print(" la personne n'est pas trouvé")
+                        bsy+=1
+
+    if exist==False:
+        print(" la personne n'est pas trouvé")
     j+=1
+if bsy!=0:
+    rech=input("voulez vous que je vous suggere une date min et date max commune")
+    if rech=='yes':
+        print(body)
+
+
 
 print("liste des attendees est:",attendee)
 attendeess = []
@@ -216,14 +266,16 @@ if reservation == 'yes':
     for i in range(0,len(freerooms)):
         if(freerooms[i] == salle):
             attendeess.append({'email': freemails[i]})
+elif reservation == 'no':
+    salle =''
 print(attendeess)
 
 #affichage des salles disponibles a cette date
 
 event = {
-    'summary': 'Google I/O 2020',
+    'summary': 'title of the event',
     'location': salle,
-    'description': 'A chance to hear more about Google\'s developer products.',
+    'description': 'test event',
     'start': {
         'dateTime': datestart,
         'timeZone': 'America/Los_Angeles',
@@ -243,9 +295,111 @@ event = {
             {'method': 'popup', 'minutes': 10},
         ],
     },
+   # 'conferenceData':{
+        #'conferenceDataVersion':1,
+        #'conferenceSolutionKey.type':"hangoutsMeet",
+        #'createRequest':'',
+
+    #},
+
 }
 
 event = service.events().insert(calendarId='primary',sendNotifications=notif, body=event).execute()
 print ('Event created: %s' % (event.get('htmlLink')))
+loc =input("donner la nouvelle location")
+for j, e in enumerate(nameroom):
+    if salle == e:
+        deletemail = emailroom[j]
+        email = {'email': deletemail}
+        print(email)
+for i in attendeess:
+    if i == email:
+        print(i)
+        attendeess.remove(i)
+        print("attedees",attendeess)
 
+for i in range(len(nameroom)):
+    if nameroom[i] == loc:
+        roommail = emailroom[i]
+print('lemail de la nouvelle sall',roommail)
+body = {
+    "timeMin": datestart,
+    "timeMax": datend,
+    "timeZone": 'America/Los_Angeles',
+    "items": [{"id": roommail}]
+}
+eventsResult = service.freebusy().query(body=body).execute()
+cal_dict = eventsResult[u'calendars']
+print(cal_dict)
+for cal_name in cal_dict:
+    print(cal_name, ':', cal_dict[cal_name])
+    statut = cal_dict[cal_name]
+    for i in statut:
+        if (i == 'busy' and statut[i] == []):
+            x= True
 
+            # ajouter l'email de x ala liste des attendee
+        elif (i == 'busy' and statut[i] != []):
+            x= False
+
+if x == True:
+    email = {'email': roommail}
+    attendeess.append(email)
+    eventup = {
+        'location': loc,
+        'attendees': attendeess,
+    }
+    service.events().patch(calendarId='primary', eventId=event['id'],
+                           sendNotifications=True, body=eventup).execute()
+else:
+    print('room busy')
+
+name = input("what is the attendee's name?")
+for j, e in enumerate(nameListe):
+    if name == e:
+        deletemail = adsmails[j]
+        email = {'email': deletemail}
+        print(email)
+for i in attendeess:
+    if i == email:
+        print(i)
+        attendeess.remove(i)
+eventup = {
+    'attendees': attendeess,
+}
+service.events().patch(calendarId='primary', eventId=event['id'],
+                           sendNotifications=True, body=eventup).execute()
+name = input("what is the attendee's name?")
+for j, e in enumerate(nameListe):
+    if name == e:
+        addemail = adsmails[j]
+        email = {'email': addemail}
+        print(email)
+body = {
+    "timeMin": datestart,
+    "timeMax": datend,
+    "timeZone": 'America/Los_Angeles',
+    "items": [{"id": addemail}]
+}
+eventsResult = service.freebusy().query(body=body).execute()
+cal_dict = eventsResult[u'calendars']
+print(cal_dict)
+for cal_name in cal_dict:
+    print(cal_name, ':', cal_dict[cal_name])
+    statut = cal_dict[cal_name]
+    for i in statut:
+        if (i == 'busy' and statut[i] == []):
+            x= True
+
+            # ajouter l'email de x ala liste des attendee
+        elif (i == 'busy' and statut[i] != []):
+            x= False
+if x == True:
+
+    email = {'email': addemail}
+    attendeess.append(email)
+    eventup = {
+        'attendees': attendeess,
+    }
+    service.events().patch(calendarId='primary', eventId=event['id'],
+                           sendNotifications=True, body=eventup).execute()
